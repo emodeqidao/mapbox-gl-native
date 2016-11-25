@@ -9,7 +9,9 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.DisplayMetrics;
+
 import timber.log.Timber;
+
 import android.view.Surface;
 
 import com.mapbox.mapboxsdk.annotations.Icon;
@@ -139,6 +141,9 @@ final class NativeMapView {
     }
 
     public void resizeView(int width, int height) {
+        width = (int) (width / pixelRatio);
+        height = (int) (height / pixelRatio);
+
         if (width < 0) {
             throw new IllegalArgumentException("width cannot be negative.");
         }
@@ -208,6 +213,10 @@ final class NativeMapView {
         nativeSetStyleUrl(nativeMapViewPtr, url);
     }
 
+    public String getStyleUrl(){
+        return nativeGetStyleUrl(nativeMapViewPtr);
+    }
+
     public void setStyleJson(String newStyleJson) {
         nativeSetStyleJson(nativeMapViewPtr, newStyleJson);
     }
@@ -269,7 +278,7 @@ final class NativeMapView {
     }
 
     public void scaleBy(double ds, double cx, double cy) {
-        scaleBy(ds, cx, cy, 0);
+        scaleBy(ds, cx/pixelRatio, cy/pixelRatio, 0);
     }
 
     public void scaleBy(double ds, double cx, double cy, long duration) {
@@ -285,7 +294,7 @@ final class NativeMapView {
     }
 
     public void setScale(double scale, double cx, double cy, long duration) {
-        nativeSetScale(nativeMapViewPtr, scale, cx, cy, duration);
+        nativeSetScale(nativeMapViewPtr, scale, cx / pixelRatio, cy / pixelRatio, duration);
     }
 
     public double getScale() {
@@ -333,8 +342,12 @@ final class NativeMapView {
         nativeRotateBy(nativeMapViewPtr, sx, sy, ex, ey, duration);
     }
 
-    public void setContentPadding(double top, double left, double bottom, double right) {
-        nativeSetContentPadding(nativeMapViewPtr, top, left, bottom, right);
+    public void setContentPadding(int[] padding) {
+        nativeSetContentPadding(nativeMapViewPtr,
+                padding[1] / pixelRatio,
+                padding[0] / pixelRatio,
+                padding[3] / pixelRatio,
+                padding[2] / pixelRatio);
     }
 
     public void setBearing(double degrees) {
@@ -346,7 +359,7 @@ final class NativeMapView {
     }
 
     public void setBearing(double degrees, double cx, double cy) {
-        nativeSetBearingXY(nativeMapViewPtr, degrees, cx, cy);
+        nativeSetBearingXY(nativeMapViewPtr, degrees, cx / pixelRatio, cy / pixelRatio);
     }
 
     public double getBearing() {
@@ -443,8 +456,8 @@ final class NativeMapView {
         nativeSetReachability(nativeMapViewPtr, status);
     }
 
-    public double getMetersPerPixelAtLatitude(double lat, double zoom) {
-        return nativeGetMetersPerPixelAtLatitude(nativeMapViewPtr, lat, zoom);
+    public double getMetersPerPixelAtLatitude(double lat) {
+        return nativeGetMetersPerPixelAtLatitude(nativeMapViewPtr, lat, getZoom());
     }
 
     public ProjectedMeters projectedMetersForLatLng(LatLng latLng) {
@@ -456,11 +469,13 @@ final class NativeMapView {
     }
 
     public PointF pixelForLatLng(LatLng latLng) {
-        return nativePixelForLatLng(nativeMapViewPtr, latLng.getLatitude(), latLng.getLongitude());
+        PointF pointF = nativePixelForLatLng(nativeMapViewPtr, latLng.getLatitude(), latLng.getLongitude());
+        pointF.set(pointF.x * pixelRatio, pointF.y * pixelRatio);
+        return pointF;
     }
 
     public LatLng latLngForPixel(PointF pixel) {
-        return nativeLatLngForPixel(nativeMapViewPtr, pixel.x, pixel.y);
+        return nativeLatLngForPixel(nativeMapViewPtr, pixel.x / pixelRatio, pixel.y / pixelRatio);
     }
 
     public double getTopOffsetPixelsForAnnotationSymbol(String symbolName) {
@@ -636,6 +651,8 @@ final class NativeMapView {
 
     private native void nativeSetStyleUrl(long nativeMapViewPtr, String url);
 
+    private native String nativeGetStyleUrl(long nativeMapViewPtr);
+
     private native void nativeSetStyleJson(long nativeMapViewPtr, String newStyleJson);
 
     private native String nativeGetStyleJson(long nativeMapViewPtr);
@@ -781,6 +798,14 @@ final class NativeMapView {
     private native Feature[] nativeQueryRenderedFeaturesForBox(long nativeMapViewPtr, float left, float top, float right, float bottom, String[] layerIds);
 
     private native void nativeSetAPIBaseURL(long nativeMapViewPtr, String baseUrl);
+
+    int getWidth() {
+        return mapView.getWidth();
+    }
+
+    int getHeight() {
+        return mapView.getHeight();
+    }
 
     //
     // MapChangeEvents

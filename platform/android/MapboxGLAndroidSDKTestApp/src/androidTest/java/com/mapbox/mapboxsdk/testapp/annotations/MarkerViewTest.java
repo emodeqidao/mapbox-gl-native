@@ -20,6 +20,7 @@ import com.mapbox.mapboxsdk.testapp.utils.ViewUtils;
 import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -45,6 +46,7 @@ public class MarkerViewTest {
     }
 
     @Test
+    @Ignore
     public void addMarkerViewTest() {
         ViewUtils.checkViewIsDisplayed(R.id.mapView);
         MapboxMap mapboxMap = rule.getActivity().getMapboxMap();
@@ -66,6 +68,7 @@ public class MarkerViewTest {
     }
 
     @Test
+    @Ignore
     public void showInfoWindowTest() {
         ViewUtils.checkViewIsDisplayed(R.id.mapView);
         MapboxMap mapboxMap = rule.getActivity().getMapboxMap();
@@ -107,7 +110,6 @@ public class MarkerViewTest {
         public void perform(UiController uiController, View view) {
             mapboxMap.getMarkerViewManager().addMarkerViewAdapter(new MarkerViewActivity.TextAdapter(view.getContext(), mapboxMap));
             marker = mapboxMap.addMarker(options);
-            mapboxMap.invalidate();
             uiController.loopMainThreadForAtLeast(250);
         }
     }
@@ -133,7 +135,6 @@ public class MarkerViewTest {
         @Override
         public void perform(UiController uiController, View view) {
             mapboxMap.selectMarker(marker);
-            mapboxMap.invalidate();
             uiController.loopMainThreadForAtLeast(250);
         }
     }
